@@ -66,7 +66,7 @@ public class Neo4j {
 				}
 				database = new Neo4jRest(uris, config.getBoolean("slave-readonly", false), vertx,
 						config.getLong("checkDelay", 3000l),
-						config.getInteger("poolsize", 32),
+						config.getInteger("poolSize", 16),
 						config.getBoolean("keepAlive", true),
 						config);
 			} catch (Exception e) {

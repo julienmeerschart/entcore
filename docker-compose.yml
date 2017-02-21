@@ -3,6 +3,6 @@ neo4j:
   ports:
     - "17474:7474"
   volumes:
-    - ./data/tests:/data
     - ./neo4j-conf:/conf
+#    - ./data/tests:/data
 
