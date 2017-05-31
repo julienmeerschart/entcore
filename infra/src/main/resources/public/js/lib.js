@@ -1754,10 +1754,10 @@ var recorder = (function(){
 		loadComponents: function () {
 		    this.title = lang.translate('recorder.filename') + moment().format('DD/MM/YYYY');
 			loaded = true;
+			
 			navigator.getUserMedia({
-				audio: true
+			audio: true
 			}, function(mediaStream){
-
 				context = new AudioContext();
 				var audioInput = context.createMediaStreamSource(mediaStream);
 				gainNode = context.createGain();
@@ -1765,13 +1765,6 @@ var recorder = (function(){
 
 				recorder = context.createScriptProcessor(bufferSize, 2, 2);
 				recorder.onaudioprocess = function(e){
-					if(this.status !== 'recording' && this.status !== 'paused' && this.status !== 'playing'){
-					    var tracks = mediaStream.getAudioTracks();
-					    for (var i = 0; i < tracks.length; i++) {
-					        tracks[i].stop();
-					    }
-						loaded = false;
-					}
 					if(this.status !== 'recording'){
 						return;
 					}
@@ -1795,6 +1788,7 @@ var recorder = (function(){
 			}.bind(this), function(err){
 
 			});
+			
 		},
 		isCompatible: function(){
 			return navigator.getUserMedia !== undefined && window.AudioContext !==undefined;
@@ -1808,7 +1802,8 @@ var recorder = (function(){
 			if(player.currentTime > 0){
 				player.currentTime = 0;
 			}
-
+			leftChannel = [];
+			rightChannel = [];
 			notifyFollowers(this.status);
 		},
 		flush: function(){
@@ -1829,7 +1824,7 @@ var recorder = (function(){
 				}
 			} else {
 				ws = new WebSocket((window.location.protocol === "https:" ? "wss": "ws") + "://" +
-						window.location.hostname + "/audio/" + uuid());
+						window.location.host + "/audio/" + uuid());
 				ws.onopen = function () {
 					if(player.currentTime > 0){
 						player.currentTime = 0;
@@ -1838,7 +1833,9 @@ var recorder = (function(){
 					that.status = 'recording';
 					notifyFollowers(this.status);
 					if(!loaded){
-						that.loadComponents();
+						http().get('/infra/public/js/zlib.min.js').done(function(){
+							that.loadComponents();
+						}.bind(this));
 					}
 				};
 				ws.onerror = function (event) {
@@ -1853,9 +1850,9 @@ var recorder = (function(){
                 		console.log(event.data);
 						closeWs();
 						notify.info(event.data);
-                	} else if (event.data && event.data === "ok") {
+                	} else if (event.data && event.data === "ok" && recorder.status === 'encoding') {
                 		closeWs();
-                		notify.info("recorder.saved")
+                		notify.info("recorder.saved");
                 	}
 
                 }
